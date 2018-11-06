@@ -1,0 +1,470 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+/*
+ * Copyright (C) 2015 - present by OpenGamma Inc. and the OpenGamma group of companies
+ *
+ * Please see distribution for license.
+ */
+namespace com.opengamma.strata.product.fra
+{
+
+
+	using Bean = org.joda.beans.Bean;
+	using ImmutableBean = org.joda.beans.ImmutableBean;
+	using JodaBeanUtils = org.joda.beans.JodaBeanUtils;
+	using MetaBean = org.joda.beans.MetaBean;
+	using MetaProperty = org.joda.beans.MetaProperty;
+	using BeanDefinition = org.joda.beans.gen.BeanDefinition;
+	using ImmutableDefaults = org.joda.beans.gen.ImmutableDefaults;
+	using PropertyDefinition = org.joda.beans.gen.PropertyDefinition;
+	using DirectFieldsBeanBuilder = org.joda.beans.impl.direct.DirectFieldsBeanBuilder;
+	using DirectMetaBean = org.joda.beans.impl.direct.DirectMetaBean;
+	using DirectMetaProperty = org.joda.beans.impl.direct.DirectMetaProperty;
+	using DirectMetaPropertyMap = org.joda.beans.impl.direct.DirectMetaPropertyMap;
+
+	using ReferenceData = com.opengamma.strata.basics.ReferenceData;
+	using SummarizerUtils = com.opengamma.strata.product.common.SummarizerUtils;
+
+	/// <summary>
+	/// A trade in a forward rate agreement (FRA).
+	/// <para>
+	/// An Over-The-Counter (OTC) trade in a <seealso cref="Fra"/>.
+	/// </para>
+	/// <para>
+	/// For example, a FRA trade might involve an agreement to exchange the difference between
+	/// the fixed rate of 1% and the 'GBP-LIBOR-3M' rate in 2 months time.
+	/// </para>
+	/// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @BeanDefinition public final class FraTrade implements com.opengamma.strata.product.ProductTrade, com.opengamma.strata.product.ResolvableTrade<ResolvedFraTrade>, org.joda.beans.ImmutableBean, java.io.Serializable
+	[Serializable]
+	public sealed class FraTrade : ProductTrade, ResolvableTrade<ResolvedFraTrade>, ImmutableBean
+	{
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @PropertyDefinition(validate = "notNull", overrideGet = true) private final com.opengamma.strata.product.TradeInfo info;
+		private readonly TradeInfo info;
+	  /// <summary>
+	  /// The FRA product that was agreed when the trade occurred.
+	  /// <para>
+	  /// The product captures the contracted financial details of the trade.
+	  /// </para>
+	  /// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @PropertyDefinition(validate = "notNull", overrideGet = true) private final Fra product;
+	  private readonly Fra product;
+
+	  //-------------------------------------------------------------------------
+	  /// <summary>
+	  /// Obtains an instance of a FRA trade.
+	  /// </summary>
+	  /// <param name="info">  the trade info </param>
+	  /// <param name="product">  the product </param>
+	  /// <returns> the trade </returns>
+	  public static FraTrade of(TradeInfo info, Fra product)
+	  {
+		return new FraTrade(info, product);
+	  }
+
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @ImmutableDefaults private static void applyDefaults(Builder builder)
+	  private static void applyDefaults(Builder builder)
+	  {
+		builder.info_Renamed = TradeInfo.empty();
+	  }
+
+	  //-------------------------------------------------------------------------
+	  public FraTrade withInfo(TradeInfo info)
+	  {
+		return new FraTrade(info, product);
+	  }
+
+	  //-------------------------------------------------------------------------
+	  public PortfolioItemSummary summarize()
+	  {
+		// 3x6 USD 1mm Rec GBP-LIBOR / Pay 2.5% : 21Jan18-21Apr18
+		StringBuilder buf = new StringBuilder(64);
+		Optional<LocalDate> tradeDate = info.TradeDate;
+		if (tradeDate.Present)
+		{
+		  // use a three day fudge to avoid most holiday and end of month issues when calculating months
+		  buf.Append(MONTHS.between(tradeDate.get(), product.StartDate.plusDays(3)));
+		  buf.Append("x");
+		  buf.Append(MONTHS.between(tradeDate.get(), product.EndDate.plusDays(3)));
+		}
+		else
+		{
+		  buf.Append(product.Index.Tenor);
+		}
+		buf.Append(' ');
+		string floatingRate = product.Index.FloatingRateName.normalized().ToString();
+		string fixedRate = SummarizerUtils.percent(product.FixedRate);
+		buf.Append(SummarizerUtils.amount(product.Currency, product.Notional));
+		buf.Append(" Rec ");
+		buf.Append(product.BuySell.Buy ? floatingRate : fixedRate);
+		buf.Append(" / Pay ");
+		buf.Append(product.BuySell.Buy ? fixedRate : floatingRate);
+		buf.Append(" : ");
+		buf.Append(SummarizerUtils.dateRange(product.StartDate, product.EndDate));
+		return SummarizerUtils.summary(this, ProductType.FRA, buf.ToString(), product.Currency);
+	  }
+
+	  public ResolvedFraTrade resolve(ReferenceData refData)
+	  {
+		return ResolvedFraTrade.builder().info(info).product(product.resolve(refData)).build();
+	  }
+
+	  //------------------------- AUTOGENERATED START -------------------------
+	  /// <summary>
+	  /// The meta-bean for {@code FraTrade}. </summary>
+	  /// <returns> the meta-bean, not null </returns>
+	  public static FraTrade.Meta meta()
+	  {
+		return FraTrade.Meta.INSTANCE;
+	  }
+
+	  static FraTrade()
+	  {
+		MetaBean.register(FraTrade.Meta.INSTANCE);
+	  }
+
+	  /// <summary>
+	  /// The serialization version id.
+	  /// </summary>
+	  private const long serialVersionUID = 1L;
+
+	  /// <summary>
+	  /// Returns a builder used to create an instance of the bean. </summary>
+	  /// <returns> the builder, not null </returns>
+	  public static FraTrade.Builder builder()
+	  {
+		return new FraTrade.Builder();
+	  }
+
+	  private FraTrade(TradeInfo info, Fra product)
+	  {
+		JodaBeanUtils.notNull(info, "info");
+		JodaBeanUtils.notNull(product, "product");
+		this.info = info;
+		this.product = product;
+	  }
+
+	  public override FraTrade.Meta metaBean()
+	  {
+		return FraTrade.Meta.INSTANCE;
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the additional trade information, defaulted to an empty instance.
+	  /// <para>
+	  /// This allows additional information to be attached to the trade.
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the value of the property, not null </returns>
+	  public TradeInfo Info
+	  {
+		  get
+		  {
+			return info;
+		  }
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the FRA product that was agreed when the trade occurred.
+	  /// <para>
+	  /// The product captures the contracted financial details of the trade.
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the value of the property, not null </returns>
+	  public Fra Product
+	  {
+		  get
+		  {
+			return product;
+		  }
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Returns a builder that allows this bean to be mutated. </summary>
+	  /// <returns> the mutable builder, not null </returns>
+	  public Builder toBuilder()
+	  {
+		return new Builder(this);
+	  }
+
+	  public override bool Equals(object obj)
+	  {
+		if (obj == this)
+		{
+		  return true;
+		}
+		if (obj != null && obj.GetType() == this.GetType())
+		{
+		  FraTrade other = (FraTrade) obj;
+		  return JodaBeanUtils.equal(info, other.info) && JodaBeanUtils.equal(product, other.product);
+		}
+		return false;
+	  }
+
+	  public override int GetHashCode()
+	  {
+		int hash = this.GetType().GetHashCode();
+		hash = hash * 31 + JodaBeanUtils.GetHashCode(info);
+		hash = hash * 31 + JodaBeanUtils.GetHashCode(product);
+		return hash;
+	  }
+
+	  public override string ToString()
+	  {
+		StringBuilder buf = new StringBuilder(96);
+		buf.Append("FraTrade{");
+		buf.Append("info").Append('=').Append(info).Append(',').Append(' ');
+		buf.Append("product").Append('=').Append(JodaBeanUtils.ToString(product));
+		buf.Append('}');
+		return buf.ToString();
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// The meta-bean for {@code FraTrade}.
+	  /// </summary>
+	  public sealed class Meta : DirectMetaBean
+	  {
+		  internal bool InstanceFieldsInitialized = false;
+
+		  internal void InitializeInstanceFields()
+		  {
+			  info_Renamed = DirectMetaProperty.ofImmutable(this, "info", typeof(FraTrade), typeof(TradeInfo));
+			  product_Renamed = DirectMetaProperty.ofImmutable(this, "product", typeof(FraTrade), typeof(Fra));
+			  metaPropertyMap$ = new DirectMetaPropertyMap(this, null, "info", "product");
+		  }
+
+		/// <summary>
+		/// The singleton instance of the meta-bean.
+		/// </summary>
+		internal static readonly Meta INSTANCE = new Meta();
+
+		/// <summary>
+		/// The meta-property for the {@code info} property.
+		/// </summary>
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal MetaProperty<TradeInfo> info_Renamed;
+		/// <summary>
+		/// The meta-property for the {@code product} property.
+		/// </summary>
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal MetaProperty<Fra> product_Renamed;
+		/// <summary>
+		/// The meta-properties.
+		/// </summary>
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: private final java.util.Map<String, org.joda.beans.MetaProperty<?>> metaPropertyMap$ = new org.joda.beans.impl.direct.DirectMetaPropertyMap(this, null, "info", "product");
+		internal IDictionary<string, MetaProperty<object>> metaPropertyMap$;
+
+		/// <summary>
+		/// Restricted constructor.
+		/// </summary>
+		internal Meta()
+		{
+			if (!InstanceFieldsInitialized)
+			{
+				InitializeInstanceFields();
+				InstanceFieldsInitialized = true;
+			}
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override protected org.joda.beans.MetaProperty<?> metaPropertyGet(String propertyName)
+		protected internal override MetaProperty<object> metaPropertyGet(string propertyName)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  return info_Renamed;
+			case -309474065: // product
+			  return product_Renamed;
+		  }
+		  return base.metaPropertyGet(propertyName);
+		}
+
+		public override FraTrade.Builder builder()
+		{
+		  return new FraTrade.Builder();
+		}
+
+		public override Type beanType()
+		{
+		  return typeof(FraTrade);
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override public java.util.Map<String, org.joda.beans.MetaProperty<?>> metaPropertyMap()
+		public override IDictionary<string, MetaProperty<object>> metaPropertyMap()
+		{
+		  return metaPropertyMap$;
+		}
+
+		//-----------------------------------------------------------------------
+		/// <summary>
+		/// The meta-property for the {@code info} property. </summary>
+		/// <returns> the meta-property, not null </returns>
+		public MetaProperty<TradeInfo> info()
+		{
+		  return info_Renamed;
+		}
+
+		/// <summary>
+		/// The meta-property for the {@code product} property. </summary>
+		/// <returns> the meta-property, not null </returns>
+		public MetaProperty<Fra> product()
+		{
+		  return product_Renamed;
+		}
+
+		//-----------------------------------------------------------------------
+		protected internal override object propertyGet(Bean bean, string propertyName, bool quiet)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  return ((FraTrade) bean).Info;
+			case -309474065: // product
+			  return ((FraTrade) bean).Product;
+		  }
+		  return base.propertyGet(bean, propertyName, quiet);
+		}
+
+		protected internal override void propertySet(Bean bean, string propertyName, object newValue, bool quiet)
+		{
+		  metaProperty(propertyName);
+		  if (quiet)
+		  {
+			return;
+		  }
+		  throw new System.NotSupportedException("Property cannot be written: " + propertyName);
+		}
+
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// The bean-builder for {@code FraTrade}.
+	  /// </summary>
+	  public sealed class Builder : DirectFieldsBeanBuilder<FraTrade>
+	  {
+
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal TradeInfo info_Renamed;
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal Fra product_Renamed;
+
+		/// <summary>
+		/// Restricted constructor.
+		/// </summary>
+		internal Builder()
+		{
+		  applyDefaults(this);
+		}
+
+		/// <summary>
+		/// Restricted copy constructor. </summary>
+		/// <param name="beanToCopy">  the bean to copy from, not null </param>
+		internal Builder(FraTrade beanToCopy)
+		{
+		  this.info_Renamed = beanToCopy.Info;
+		  this.product_Renamed = beanToCopy.Product;
+		}
+
+		//-----------------------------------------------------------------------
+		public override object get(string propertyName)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  return info_Renamed;
+			case -309474065: // product
+			  return product_Renamed;
+			default:
+			  throw new NoSuchElementException("Unknown property: " + propertyName);
+		  }
+		}
+
+		public override Builder set(string propertyName, object newValue)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  this.info_Renamed = (TradeInfo) newValue;
+			  break;
+			case -309474065: // product
+			  this.product_Renamed = (Fra) newValue;
+			  break;
+			default:
+			  throw new NoSuchElementException("Unknown property: " + propertyName);
+		  }
+		  return this;
+		}
+
+		public override Builder set<T1>(MetaProperty<T1> property, object value)
+		{
+		  base.set(property, value);
+		  return this;
+		}
+
+		public override FraTrade build()
+		{
+		  return new FraTrade(info_Renamed, product_Renamed);
+		}
+
+		//-----------------------------------------------------------------------
+		/// <summary>
+		/// Sets the additional trade information, defaulted to an empty instance.
+		/// <para>
+		/// This allows additional information to be attached to the trade.
+		/// </para>
+		/// </summary>
+		/// <param name="info">  the new value, not null </param>
+		/// <returns> this, for chaining, not null </returns>
+		public Builder info(TradeInfo info)
+		{
+		  JodaBeanUtils.notNull(info, "info");
+		  this.info_Renamed = info;
+		  return this;
+		}
+
+		/// <summary>
+		/// Sets the FRA product that was agreed when the trade occurred.
+		/// <para>
+		/// The product captures the contracted financial details of the trade.
+		/// </para>
+		/// </summary>
+		/// <param name="product">  the new value, not null </param>
+		/// <returns> this, for chaining, not null </returns>
+		public Builder product(Fra product)
+		{
+		  JodaBeanUtils.notNull(product, "product");
+		  this.product_Renamed = product;
+		  return this;
+		}
+
+		//-----------------------------------------------------------------------
+		public override string ToString()
+		{
+		  StringBuilder buf = new StringBuilder(96);
+		  buf.Append("FraTrade.Builder{");
+		  buf.Append("info").Append('=').Append(JodaBeanUtils.ToString(info_Renamed)).Append(',').Append(' ');
+		  buf.Append("product").Append('=').Append(JodaBeanUtils.ToString(product_Renamed));
+		  buf.Append('}');
+		  return buf.ToString();
+		}
+
+	  }
+
+	  //-------------------------- AUTOGENERATED END --------------------------
+	}
+
+}

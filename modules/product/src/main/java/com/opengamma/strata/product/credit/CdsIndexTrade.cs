@@ -1,0 +1,522 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+/*
+ * Copyright (C) 2016 - present by OpenGamma Inc. and the OpenGamma group of companies
+ *
+ * Please see distribution for license.
+ */
+namespace com.opengamma.strata.product.credit
+{
+
+	using Bean = org.joda.beans.Bean;
+	using ImmutableBean = org.joda.beans.ImmutableBean;
+	using JodaBeanUtils = org.joda.beans.JodaBeanUtils;
+	using MetaBean = org.joda.beans.MetaBean;
+	using MetaProperty = org.joda.beans.MetaProperty;
+	using BeanDefinition = org.joda.beans.gen.BeanDefinition;
+	using PropertyDefinition = org.joda.beans.gen.PropertyDefinition;
+	using DirectFieldsBeanBuilder = org.joda.beans.impl.direct.DirectFieldsBeanBuilder;
+	using DirectMetaBean = org.joda.beans.impl.direct.DirectMetaBean;
+	using DirectMetaProperty = org.joda.beans.impl.direct.DirectMetaProperty;
+	using DirectMetaPropertyMap = org.joda.beans.impl.direct.DirectMetaPropertyMap;
+
+	using ReferenceData = com.opengamma.strata.basics.ReferenceData;
+	using AdjustablePayment = com.opengamma.strata.basics.currency.AdjustablePayment;
+	using PeriodicSchedule = com.opengamma.strata.basics.schedule.PeriodicSchedule;
+	using SummarizerUtils = com.opengamma.strata.product.common.SummarizerUtils;
+
+	/// <summary>
+	/// A trade in a CDS index.
+	/// <para>
+	/// An Over-The-Counter (OTC) trade in a <seealso cref="CdsIndex"/>.
+	/// </para>
+	/// <para>
+	/// A CDS index is a portofolio of single name credit default swaps. 
+	/// The contract periodically pays fixed coupons to the index buyer until the expiry, 
+	/// and in return, the index buyer receives the bond of a defaulted constituent legal entity for par.  
+	/// </para>
+	/// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @BeanDefinition public final class CdsIndexTrade implements com.opengamma.strata.product.ProductTrade, com.opengamma.strata.product.ResolvableTrade<ResolvedCdsIndexTrade>, org.joda.beans.ImmutableBean, java.io.Serializable
+	[Serializable]
+	public sealed class CdsIndexTrade : ProductTrade, ResolvableTrade<ResolvedCdsIndexTrade>, ImmutableBean
+	{
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @PropertyDefinition(validate = "notNull", overrideGet = true) private final com.opengamma.strata.product.TradeInfo info;
+		private readonly TradeInfo info;
+	  /// <summary>
+	  /// The CDS index product that was agreed when the trade occurred.
+	  /// <para>
+	  /// The product captures the contracted financial details of the trade.
+	  /// </para>
+	  /// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @PropertyDefinition(validate = "notNull", overrideGet = true) private final CdsIndex product;
+	  private readonly CdsIndex product;
+	  /// <summary>
+	  /// The upfront fee of the product.
+	  /// <para>
+	  /// This specifies a single amount payable by the buyer to the seller.
+	  /// Thus the sign must be compatible with the product Pay/Receive flag.
+	  /// </para>
+	  /// <para>
+	  /// Some CDSs, especially legacy products, are traded at par and the upfront fee is not paid.
+	  /// </para>
+	  /// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @PropertyDefinition(get = "optional") private final com.opengamma.strata.basics.currency.AdjustablePayment upfrontFee;
+	  private readonly AdjustablePayment upfrontFee;
+
+	  //-------------------------------------------------------------------------
+	  public CdsIndexTrade withInfo(TradeInfo info)
+	  {
+		return new CdsIndexTrade(info, product, upfrontFee);
+	  }
+
+	  //-------------------------------------------------------------------------
+	  public PortfolioItemSummary summarize()
+	  {
+		// 2Y Buy USD 1mm INDEX / 1.5% : 21Jan18-21Jan20
+		PeriodicSchedule paymentSchedule = product.PaymentSchedule;
+		StringBuilder buf = new StringBuilder(96);
+		buf.Append(SummarizerUtils.datePeriod(paymentSchedule.StartDate, paymentSchedule.EndDate));
+		buf.Append(' ');
+		buf.Append(product.BuySell);
+		buf.Append(' ');
+		buf.Append(SummarizerUtils.amount(product.Currency, product.Notional));
+		buf.Append(' ');
+		buf.Append(product.CdsIndexId.Value);
+		buf.Append(" / ");
+		buf.Append(SummarizerUtils.percent(product.FixedRate));
+		buf.Append(" : ");
+		buf.Append(SummarizerUtils.dateRange(paymentSchedule.StartDate, paymentSchedule.EndDate));
+		return SummarizerUtils.summary(this, ProductType.CDS_INDEX, buf.ToString(), product.Currency);
+	  }
+
+	  public ResolvedCdsIndexTrade resolve(ReferenceData refData)
+	  {
+		return ResolvedCdsIndexTrade.builder().info(info).product(product.resolve(refData)).upfrontFee(upfrontFee != null ? upfrontFee.resolve(refData) : null).build();
+	  }
+
+	  //------------------------- AUTOGENERATED START -------------------------
+	  /// <summary>
+	  /// The meta-bean for {@code CdsIndexTrade}. </summary>
+	  /// <returns> the meta-bean, not null </returns>
+	  public static CdsIndexTrade.Meta meta()
+	  {
+		return CdsIndexTrade.Meta.INSTANCE;
+	  }
+
+	  static CdsIndexTrade()
+	  {
+		MetaBean.register(CdsIndexTrade.Meta.INSTANCE);
+	  }
+
+	  /// <summary>
+	  /// The serialization version id.
+	  /// </summary>
+	  private const long serialVersionUID = 1L;
+
+	  /// <summary>
+	  /// Returns a builder used to create an instance of the bean. </summary>
+	  /// <returns> the builder, not null </returns>
+	  public static CdsIndexTrade.Builder builder()
+	  {
+		return new CdsIndexTrade.Builder();
+	  }
+
+	  private CdsIndexTrade(TradeInfo info, CdsIndex product, AdjustablePayment upfrontFee)
+	  {
+		JodaBeanUtils.notNull(info, "info");
+		JodaBeanUtils.notNull(product, "product");
+		this.info = info;
+		this.product = product;
+		this.upfrontFee = upfrontFee;
+	  }
+
+	  public override CdsIndexTrade.Meta metaBean()
+	  {
+		return CdsIndexTrade.Meta.INSTANCE;
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the additional trade information, defaulted to an empty instance.
+	  /// <para>
+	  /// This allows additional information to be attached to the trade.
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the value of the property, not null </returns>
+	  public TradeInfo Info
+	  {
+		  get
+		  {
+			return info;
+		  }
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the CDS index product that was agreed when the trade occurred.
+	  /// <para>
+	  /// The product captures the contracted financial details of the trade.
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the value of the property, not null </returns>
+	  public CdsIndex Product
+	  {
+		  get
+		  {
+			return product;
+		  }
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the upfront fee of the product.
+	  /// <para>
+	  /// This specifies a single amount payable by the buyer to the seller.
+	  /// Thus the sign must be compatible with the product Pay/Receive flag.
+	  /// </para>
+	  /// <para>
+	  /// Some CDSs, especially legacy products, are traded at par and the upfront fee is not paid.
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the optional value of the property, not null </returns>
+	  public Optional<AdjustablePayment> UpfrontFee
+	  {
+		  get
+		  {
+			return Optional.ofNullable(upfrontFee);
+		  }
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Returns a builder that allows this bean to be mutated. </summary>
+	  /// <returns> the mutable builder, not null </returns>
+	  public Builder toBuilder()
+	  {
+		return new Builder(this);
+	  }
+
+	  public override bool Equals(object obj)
+	  {
+		if (obj == this)
+		{
+		  return true;
+		}
+		if (obj != null && obj.GetType() == this.GetType())
+		{
+		  CdsIndexTrade other = (CdsIndexTrade) obj;
+		  return JodaBeanUtils.equal(info, other.info) && JodaBeanUtils.equal(product, other.product) && JodaBeanUtils.equal(upfrontFee, other.upfrontFee);
+		}
+		return false;
+	  }
+
+	  public override int GetHashCode()
+	  {
+		int hash = this.GetType().GetHashCode();
+		hash = hash * 31 + JodaBeanUtils.GetHashCode(info);
+		hash = hash * 31 + JodaBeanUtils.GetHashCode(product);
+		hash = hash * 31 + JodaBeanUtils.GetHashCode(upfrontFee);
+		return hash;
+	  }
+
+	  public override string ToString()
+	  {
+		StringBuilder buf = new StringBuilder(128);
+		buf.Append("CdsIndexTrade{");
+		buf.Append("info").Append('=').Append(info).Append(',').Append(' ');
+		buf.Append("product").Append('=').Append(product).Append(',').Append(' ');
+		buf.Append("upfrontFee").Append('=').Append(JodaBeanUtils.ToString(upfrontFee));
+		buf.Append('}');
+		return buf.ToString();
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// The meta-bean for {@code CdsIndexTrade}.
+	  /// </summary>
+	  public sealed class Meta : DirectMetaBean
+	  {
+		  internal bool InstanceFieldsInitialized = false;
+
+		  internal void InitializeInstanceFields()
+		  {
+			  info_Renamed = DirectMetaProperty.ofImmutable(this, "info", typeof(CdsIndexTrade), typeof(TradeInfo));
+			  product_Renamed = DirectMetaProperty.ofImmutable(this, "product", typeof(CdsIndexTrade), typeof(CdsIndex));
+			  upfrontFee_Renamed = DirectMetaProperty.ofImmutable(this, "upfrontFee", typeof(CdsIndexTrade), typeof(AdjustablePayment));
+			  metaPropertyMap$ = new DirectMetaPropertyMap(this, null, "info", "product", "upfrontFee");
+		  }
+
+		/// <summary>
+		/// The singleton instance of the meta-bean.
+		/// </summary>
+		internal static readonly Meta INSTANCE = new Meta();
+
+		/// <summary>
+		/// The meta-property for the {@code info} property.
+		/// </summary>
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal MetaProperty<TradeInfo> info_Renamed;
+		/// <summary>
+		/// The meta-property for the {@code product} property.
+		/// </summary>
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal MetaProperty<CdsIndex> product_Renamed;
+		/// <summary>
+		/// The meta-property for the {@code upfrontFee} property.
+		/// </summary>
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal MetaProperty<AdjustablePayment> upfrontFee_Renamed;
+		/// <summary>
+		/// The meta-properties.
+		/// </summary>
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: private final java.util.Map<String, org.joda.beans.MetaProperty<?>> metaPropertyMap$ = new org.joda.beans.impl.direct.DirectMetaPropertyMap(this, null, "info", "product", "upfrontFee");
+		internal IDictionary<string, MetaProperty<object>> metaPropertyMap$;
+
+		/// <summary>
+		/// Restricted constructor.
+		/// </summary>
+		internal Meta()
+		{
+			if (!InstanceFieldsInitialized)
+			{
+				InitializeInstanceFields();
+				InstanceFieldsInitialized = true;
+			}
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override protected org.joda.beans.MetaProperty<?> metaPropertyGet(String propertyName)
+		protected internal override MetaProperty<object> metaPropertyGet(string propertyName)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  return info_Renamed;
+			case -309474065: // product
+			  return product_Renamed;
+			case 963468344: // upfrontFee
+			  return upfrontFee_Renamed;
+		  }
+		  return base.metaPropertyGet(propertyName);
+		}
+
+		public override CdsIndexTrade.Builder builder()
+		{
+		  return new CdsIndexTrade.Builder();
+		}
+
+		public override Type beanType()
+		{
+		  return typeof(CdsIndexTrade);
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override public java.util.Map<String, org.joda.beans.MetaProperty<?>> metaPropertyMap()
+		public override IDictionary<string, MetaProperty<object>> metaPropertyMap()
+		{
+		  return metaPropertyMap$;
+		}
+
+		//-----------------------------------------------------------------------
+		/// <summary>
+		/// The meta-property for the {@code info} property. </summary>
+		/// <returns> the meta-property, not null </returns>
+		public MetaProperty<TradeInfo> info()
+		{
+		  return info_Renamed;
+		}
+
+		/// <summary>
+		/// The meta-property for the {@code product} property. </summary>
+		/// <returns> the meta-property, not null </returns>
+		public MetaProperty<CdsIndex> product()
+		{
+		  return product_Renamed;
+		}
+
+		/// <summary>
+		/// The meta-property for the {@code upfrontFee} property. </summary>
+		/// <returns> the meta-property, not null </returns>
+		public MetaProperty<AdjustablePayment> upfrontFee()
+		{
+		  return upfrontFee_Renamed;
+		}
+
+		//-----------------------------------------------------------------------
+		protected internal override object propertyGet(Bean bean, string propertyName, bool quiet)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  return ((CdsIndexTrade) bean).Info;
+			case -309474065: // product
+			  return ((CdsIndexTrade) bean).Product;
+			case 963468344: // upfrontFee
+			  return ((CdsIndexTrade) bean).upfrontFee;
+		  }
+		  return base.propertyGet(bean, propertyName, quiet);
+		}
+
+		protected internal override void propertySet(Bean bean, string propertyName, object newValue, bool quiet)
+		{
+		  metaProperty(propertyName);
+		  if (quiet)
+		  {
+			return;
+		  }
+		  throw new System.NotSupportedException("Property cannot be written: " + propertyName);
+		}
+
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// The bean-builder for {@code CdsIndexTrade}.
+	  /// </summary>
+	  public sealed class Builder : DirectFieldsBeanBuilder<CdsIndexTrade>
+	  {
+
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal TradeInfo info_Renamed;
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal CdsIndex product_Renamed;
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal AdjustablePayment upfrontFee_Renamed;
+
+		/// <summary>
+		/// Restricted constructor.
+		/// </summary>
+		internal Builder()
+		{
+		}
+
+		/// <summary>
+		/// Restricted copy constructor. </summary>
+		/// <param name="beanToCopy">  the bean to copy from, not null </param>
+		internal Builder(CdsIndexTrade beanToCopy)
+		{
+		  this.info_Renamed = beanToCopy.Info;
+		  this.product_Renamed = beanToCopy.Product;
+		  this.upfrontFee_Renamed = beanToCopy.upfrontFee;
+		}
+
+		//-----------------------------------------------------------------------
+		public override object get(string propertyName)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  return info_Renamed;
+			case -309474065: // product
+			  return product_Renamed;
+			case 963468344: // upfrontFee
+			  return upfrontFee_Renamed;
+			default:
+			  throw new NoSuchElementException("Unknown property: " + propertyName);
+		  }
+		}
+
+		public override Builder set(string propertyName, object newValue)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case 3237038: // info
+			  this.info_Renamed = (TradeInfo) newValue;
+			  break;
+			case -309474065: // product
+			  this.product_Renamed = (CdsIndex) newValue;
+			  break;
+			case 963468344: // upfrontFee
+			  this.upfrontFee_Renamed = (AdjustablePayment) newValue;
+			  break;
+			default:
+			  throw new NoSuchElementException("Unknown property: " + propertyName);
+		  }
+		  return this;
+		}
+
+		public override Builder set<T1>(MetaProperty<T1> property, object value)
+		{
+		  base.set(property, value);
+		  return this;
+		}
+
+		public override CdsIndexTrade build()
+		{
+		  return new CdsIndexTrade(info_Renamed, product_Renamed, upfrontFee_Renamed);
+		}
+
+		//-----------------------------------------------------------------------
+		/// <summary>
+		/// Sets the additional trade information, defaulted to an empty instance.
+		/// <para>
+		/// This allows additional information to be attached to the trade.
+		/// </para>
+		/// </summary>
+		/// <param name="info">  the new value, not null </param>
+		/// <returns> this, for chaining, not null </returns>
+		public Builder info(TradeInfo info)
+		{
+		  JodaBeanUtils.notNull(info, "info");
+		  this.info_Renamed = info;
+		  return this;
+		}
+
+		/// <summary>
+		/// Sets the CDS index product that was agreed when the trade occurred.
+		/// <para>
+		/// The product captures the contracted financial details of the trade.
+		/// </para>
+		/// </summary>
+		/// <param name="product">  the new value, not null </param>
+		/// <returns> this, for chaining, not null </returns>
+		public Builder product(CdsIndex product)
+		{
+		  JodaBeanUtils.notNull(product, "product");
+		  this.product_Renamed = product;
+		  return this;
+		}
+
+		/// <summary>
+		/// Sets the upfront fee of the product.
+		/// <para>
+		/// This specifies a single amount payable by the buyer to the seller.
+		/// Thus the sign must be compatible with the product Pay/Receive flag.
+		/// </para>
+		/// <para>
+		/// Some CDSs, especially legacy products, are traded at par and the upfront fee is not paid.
+		/// </para>
+		/// </summary>
+		/// <param name="upfrontFee">  the new value </param>
+		/// <returns> this, for chaining, not null </returns>
+		public Builder upfrontFee(AdjustablePayment upfrontFee)
+		{
+		  this.upfrontFee_Renamed = upfrontFee;
+		  return this;
+		}
+
+		//-----------------------------------------------------------------------
+		public override string ToString()
+		{
+		  StringBuilder buf = new StringBuilder(128);
+		  buf.Append("CdsIndexTrade.Builder{");
+		  buf.Append("info").Append('=').Append(JodaBeanUtils.ToString(info_Renamed)).Append(',').Append(' ');
+		  buf.Append("product").Append('=').Append(JodaBeanUtils.ToString(product_Renamed)).Append(',').Append(' ');
+		  buf.Append("upfrontFee").Append('=').Append(JodaBeanUtils.ToString(upfrontFee_Renamed));
+		  buf.Append('}');
+		  return buf.ToString();
+		}
+
+	  }
+
+	  //-------------------------- AUTOGENERATED END --------------------------
+	}
+
+}

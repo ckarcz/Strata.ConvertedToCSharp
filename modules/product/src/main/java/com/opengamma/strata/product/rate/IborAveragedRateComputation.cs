@@ -1,0 +1,368 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+/*
+ * Copyright (C) 2014 - present by OpenGamma Inc. and the OpenGamma group of companies
+ *
+ * Please see distribution for license.
+ */
+namespace com.opengamma.strata.product.rate
+{
+//JAVA TO C# CONVERTER TODO TASK: This Java 'import static' statement cannot be converted to C#:
+//	import static com.opengamma.strata.collect.Guavate.ensureOnlyOne;
+
+
+	using Bean = org.joda.beans.Bean;
+	using BeanBuilder = org.joda.beans.BeanBuilder;
+	using ImmutableBean = org.joda.beans.ImmutableBean;
+	using JodaBeanUtils = org.joda.beans.JodaBeanUtils;
+	using MetaBean = org.joda.beans.MetaBean;
+	using MetaProperty = org.joda.beans.MetaProperty;
+	using BeanDefinition = org.joda.beans.gen.BeanDefinition;
+	using ImmutableConstructor = org.joda.beans.gen.ImmutableConstructor;
+	using PropertyDefinition = org.joda.beans.gen.PropertyDefinition;
+	using DirectMetaBean = org.joda.beans.impl.direct.DirectMetaBean;
+	using DirectMetaProperty = org.joda.beans.impl.direct.DirectMetaProperty;
+	using DirectMetaPropertyMap = org.joda.beans.impl.direct.DirectMetaPropertyMap;
+	using DirectPrivateBeanBuilder = org.joda.beans.impl.direct.DirectPrivateBeanBuilder;
+
+	using ImmutableList = com.google.common.collect.ImmutableList;
+	using ImmutableSet = com.google.common.collect.ImmutableSet;
+	using IborIndex = com.opengamma.strata.basics.index.IborIndex;
+	using Index = com.opengamma.strata.basics.index.Index;
+
+	/// <summary>
+	/// Defines the computation of a rate of interest based on the average of multiple
+	/// fixings of a single Ibor floating rate index.
+	/// <para>
+	/// An interest rate determined from a single Ibor index observed on multiple dates.
+	/// For example, the average of three fixings of 'GBP-LIBOR-3M'.
+	/// </para>
+	/// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @BeanDefinition(builderScope = "private") public final class IborAveragedRateComputation implements RateComputation, org.joda.beans.ImmutableBean, java.io.Serializable
+	[Serializable]
+	public sealed class IborAveragedRateComputation : RateComputation, ImmutableBean
+	{
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @PropertyDefinition(validate = "notEmpty") private final com.google.common.collect.ImmutableList<IborAveragedFixing> fixings;
+		private readonly ImmutableList<IborAveragedFixing> fixings;
+	  /// <summary>
+	  /// The total weight of all the fixings in this computation.
+	  /// </summary>
+	  [NonSerialized]
+	  private readonly double totalWeight; // not a property, derived and cached from input data
+
+	  //-------------------------------------------------------------------------
+	  /// <summary>
+	  /// Creates an instance from the individual fixings.
+	  /// <para>
+	  /// All the fixings must have the same index.
+	  /// 
+	  /// </para>
+	  /// </summary>
+	  /// <param name="fixings">  the weighted fixings </param>
+	  /// <returns> the averaged rate computation </returns>
+	  public static IborAveragedRateComputation of(IList<IborAveragedFixing> fixings)
+	  {
+		return new IborAveragedRateComputation(fixings);
+	  }
+
+	  //-------------------------------------------------------------------------
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @ImmutableConstructor private IborAveragedRateComputation(java.util.List<IborAveragedFixing> fixings)
+	  private IborAveragedRateComputation(IList<IborAveragedFixing> fixings)
+	  {
+		fixings.Select(f => f.Observation.Index).Distinct().Aggregate(ensureOnlyOne());
+		this.fixings = ImmutableList.copyOf(fixings);
+		this.totalWeight = fixings.Select(f => f.Weight).Sum();
+	  }
+
+	  // ensure standard constructor is invoked
+	  private object readResolve()
+	  {
+		return new IborAveragedRateComputation(fixings);
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the Ibor index.
+	  /// <para>
+	  /// The rate to be paid is based on this index
+	  /// It will be a well known market index such as 'GBP-LIBOR-3M'.
+	  /// 
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the Ibor index </returns>
+	  public IborIndex Index
+	  {
+		  get
+		  {
+			return fixings.get(0).Observation.Index;
+		  }
+	  }
+
+	  //-------------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets total weight of all the fixings in this observation.
+	  /// </summary>
+	  /// <returns> the total weight </returns>
+	  public double TotalWeight
+	  {
+		  get
+		  {
+			return totalWeight;
+		  }
+	  }
+
+	  //-------------------------------------------------------------------------
+	  public void collectIndices(ImmutableSet.Builder<Index> builder)
+	  {
+		builder.add(Index);
+	  }
+
+	  //------------------------- AUTOGENERATED START -------------------------
+	  /// <summary>
+	  /// The meta-bean for {@code IborAveragedRateComputation}. </summary>
+	  /// <returns> the meta-bean, not null </returns>
+	  public static IborAveragedRateComputation.Meta meta()
+	  {
+		return IborAveragedRateComputation.Meta.INSTANCE;
+	  }
+
+	  static IborAveragedRateComputation()
+	  {
+		MetaBean.register(IborAveragedRateComputation.Meta.INSTANCE);
+	  }
+
+	  /// <summary>
+	  /// The serialization version id.
+	  /// </summary>
+	  private const long serialVersionUID = 1L;
+
+	  public override IborAveragedRateComputation.Meta metaBean()
+	  {
+		return IborAveragedRateComputation.Meta.INSTANCE;
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// Gets the list of fixings.
+	  /// <para>
+	  /// A fixing will be taken for each reset period, with the final rate
+	  /// being an average of the fixings.
+	  /// </para>
+	  /// </summary>
+	  /// <returns> the value of the property, not empty </returns>
+	  public ImmutableList<IborAveragedFixing> Fixings
+	  {
+		  get
+		  {
+			return fixings;
+		  }
+	  }
+
+	  //-----------------------------------------------------------------------
+	  public override bool Equals(object obj)
+	  {
+		if (obj == this)
+		{
+		  return true;
+		}
+		if (obj != null && obj.GetType() == this.GetType())
+		{
+		  IborAveragedRateComputation other = (IborAveragedRateComputation) obj;
+		  return JodaBeanUtils.equal(fixings, other.fixings);
+		}
+		return false;
+	  }
+
+	  public override int GetHashCode()
+	  {
+		int hash = this.GetType().GetHashCode();
+		hash = hash * 31 + JodaBeanUtils.GetHashCode(fixings);
+		return hash;
+	  }
+
+	  public override string ToString()
+	  {
+		StringBuilder buf = new StringBuilder(64);
+		buf.Append("IborAveragedRateComputation{");
+		buf.Append("fixings").Append('=').Append(JodaBeanUtils.ToString(fixings));
+		buf.Append('}');
+		return buf.ToString();
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// The meta-bean for {@code IborAveragedRateComputation}.
+	  /// </summary>
+	  public sealed class Meta : DirectMetaBean
+	  {
+		  internal bool InstanceFieldsInitialized = false;
+
+		  internal void InitializeInstanceFields()
+		  {
+			  fixings_Renamed = DirectMetaProperty.ofImmutable(this, "fixings", typeof(IborAveragedRateComputation), (Type) typeof(ImmutableList));
+			  metaPropertyMap$ = new DirectMetaPropertyMap(this, null, "fixings");
+		  }
+
+		/// <summary>
+		/// The singleton instance of the meta-bean.
+		/// </summary>
+		internal static readonly Meta INSTANCE = new Meta();
+
+		/// <summary>
+		/// The meta-property for the {@code fixings} property.
+		/// </summary>
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @SuppressWarnings({"unchecked", "rawtypes" }) private final org.joda.beans.MetaProperty<com.google.common.collect.ImmutableList<IborAveragedFixing>> fixings = org.joda.beans.impl.direct.DirectMetaProperty.ofImmutable(this, "fixings", IborAveragedRateComputation.class, (Class) com.google.common.collect.ImmutableList.class);
+//JAVA TO C# CONVERTER NOTE: Fields cannot have the same name as methods:
+		internal MetaProperty<ImmutableList<IborAveragedFixing>> fixings_Renamed;
+		/// <summary>
+		/// The meta-properties.
+		/// </summary>
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: private final java.util.Map<String, org.joda.beans.MetaProperty<?>> metaPropertyMap$ = new org.joda.beans.impl.direct.DirectMetaPropertyMap(this, null, "fixings");
+		internal IDictionary<string, MetaProperty<object>> metaPropertyMap$;
+
+		/// <summary>
+		/// Restricted constructor.
+		/// </summary>
+		internal Meta()
+		{
+			if (!InstanceFieldsInitialized)
+			{
+				InitializeInstanceFields();
+				InstanceFieldsInitialized = true;
+			}
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override protected org.joda.beans.MetaProperty<?> metaPropertyGet(String propertyName)
+		protected internal override MetaProperty<object> metaPropertyGet(string propertyName)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case -843784602: // fixings
+			  return fixings_Renamed;
+		  }
+		  return base.metaPropertyGet(propertyName);
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override public org.joda.beans.BeanBuilder<? extends IborAveragedRateComputation> builder()
+		public override BeanBuilder<IborAveragedRateComputation> builder()
+		{
+		  return new IborAveragedRateComputation.Builder();
+		}
+
+		public override Type beanType()
+		{
+		  return typeof(IborAveragedRateComputation);
+		}
+
+//JAVA TO C# CONVERTER WARNING: Java wildcard generics have no direct equivalent in .NET:
+//ORIGINAL LINE: @Override public java.util.Map<String, org.joda.beans.MetaProperty<?>> metaPropertyMap()
+		public override IDictionary<string, MetaProperty<object>> metaPropertyMap()
+		{
+		  return metaPropertyMap$;
+		}
+
+		//-----------------------------------------------------------------------
+		/// <summary>
+		/// The meta-property for the {@code fixings} property. </summary>
+		/// <returns> the meta-property, not null </returns>
+		public MetaProperty<ImmutableList<IborAveragedFixing>> fixings()
+		{
+		  return fixings_Renamed;
+		}
+
+		//-----------------------------------------------------------------------
+		protected internal override object propertyGet(Bean bean, string propertyName, bool quiet)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case -843784602: // fixings
+			  return ((IborAveragedRateComputation) bean).Fixings;
+		  }
+		  return base.propertyGet(bean, propertyName, quiet);
+		}
+
+		protected internal override void propertySet(Bean bean, string propertyName, object newValue, bool quiet)
+		{
+		  metaProperty(propertyName);
+		  if (quiet)
+		  {
+			return;
+		  }
+		  throw new System.NotSupportedException("Property cannot be written: " + propertyName);
+		}
+
+	  }
+
+	  //-----------------------------------------------------------------------
+	  /// <summary>
+	  /// The bean-builder for {@code IborAveragedRateComputation}.
+	  /// </summary>
+	  private sealed class Builder : DirectPrivateBeanBuilder<IborAveragedRateComputation>
+	  {
+
+		internal IList<IborAveragedFixing> fixings = ImmutableList.of();
+
+		/// <summary>
+		/// Restricted constructor.
+		/// </summary>
+		internal Builder()
+		{
+		}
+
+		//-----------------------------------------------------------------------
+		public override object get(string propertyName)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case -843784602: // fixings
+			  return fixings;
+			default:
+			  throw new NoSuchElementException("Unknown property: " + propertyName);
+		  }
+		}
+
+//JAVA TO C# CONVERTER TODO TASK: Most Java annotations will not have direct .NET equivalent attributes:
+//ORIGINAL LINE: @SuppressWarnings("unchecked") @Override public Builder set(String propertyName, Object newValue)
+		public override Builder set(string propertyName, object newValue)
+		{
+		  switch (propertyName.GetHashCode())
+		  {
+			case -843784602: // fixings
+			  this.fixings = (IList<IborAveragedFixing>) newValue;
+			  break;
+			default:
+			  throw new NoSuchElementException("Unknown property: " + propertyName);
+		  }
+		  return this;
+		}
+
+		public override IborAveragedRateComputation build()
+		{
+		  return new IborAveragedRateComputation(fixings);
+		}
+
+		//-----------------------------------------------------------------------
+		public override string ToString()
+		{
+		  StringBuilder buf = new StringBuilder(64);
+		  buf.Append("IborAveragedRateComputation.Builder{");
+		  buf.Append("fixings").Append('=').Append(JodaBeanUtils.ToString(fixings));
+		  buf.Append('}');
+		  return buf.ToString();
+		}
+
+	  }
+
+	  //-------------------------- AUTOGENERATED END --------------------------
+	}
+
+}
